@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CA Final Audit – Smart Lecture Tracker</title>
+
+<style>
+  :root {
+    --bg1: #07192f;
+    --bg2: #182d56;
+    --glass: rgba(255, 255, 255, 0.10);
+    --glass-strong: rgba(255, 255, 255, 0.16);
+    --border: rgba(255, 255, 255, 0.18);
+    --text: #f5f8ff;
+    --muted: #b7c4dc;
+    --primary: #78a8ff;
+    --green: #45dc9a;
+    --orange: #ffbd66;
+    --red: #ff7474;
+    --shadow: 0 16px 42px rgba(0, 0, 0, 0.24);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    background:
+      radial-gradient(circle at 10% 10%, #2859aa 0%, transparent 30%),
+      radial-gradient(circle at 90% 20%, #6841a4 0%, transparent 28%),
+      radial-gradient(circle at 60% 95%, #15726d 0%, transparent 30%),
+      linear-gradient(140deg, var(--bg1), var(--bg2));
+    background-attachment: fixed;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    width: 420px;
+    height: 420px;
+    top: 20%;
+    left: -150px;
+    border-radius: 50%;
+    background: rgba(106, 159, 255, 0.12);
+    filter: blur(40px);
+    pointer-events: none;
+  }
+
+  header {
+    padding: 34px max(20px, 6vw);
+    border-bottom: 1px solid var(--border);
+    background: rgba(5, 15, 33, 0.24);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: clamp(1.6rem, 4vw, 2.5rem);
+  }
+
+  header p {
+    color: var(--muted);
+    margin: 9px 0 0;
+  }
+
+  .wrap {
+    max-width: 1550px;
+    margin: auto;
+    padding: 25px;
+  }
+
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: 18px;
+  }
+
+  .toolbar,
+  .filters,
+  .settings {
+    padding: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  button, .btn, input, select {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    font: inherit;
+  }
+
+  button, .btn {
+    color: #07192f;
+    background: linear-gradient(135deg, #a4c3ff, #72f0c1);
+    border: none;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .18s ease, opacity .18s ease;
+  }
+
+  button:hover, .btn:hover {
+    transform: translateY(-2px);
+    opacity: .93;
+  }
+
+  button.secondary, .btn.secondary {
+    color: var(--text);
+    background: rgba(255,255,255,.11);
+    border: 1px solid var(--border);
+  }
+
+  button.danger {
+    color: white;
+    background: rgba(255, 90, 90, .78);
+  }
+
+  input, select {
+    color: var(--text);
+    background: rgba(8, 20, 42, .55);
+    outline: none;
+  }
+
+  option { background: #132747; color: white; }
+
+  .spacer { flex: 1; }
+
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(155px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 18px;
+    min-height: 145px;
+  }
+
+  .label {
+    color: var(--muted);
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+  }
+
+  .value {
+    margin-top: 10px;
+    font-size: 1.65rem;
+    font-weight: 850;
+  }
+
+  .sub {
+    color: var(--muted);
+    font-size: .82rem;
+    margin-top: 6px;
+  }
+
+  .progress {
+    height: 9px;
+    margin-top: 14px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: rgba(255,255,255,.14);
+  }
+
+  .progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #54dfaa, #70a9ff);
+  }
+
+  .analytics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .chart-card { padding: 18px; }
+  .chart-card h3 { margin-top: 0; }
+  canvas {
+    width: 100%;
+    height: 260px;
+    border-radius: 12px;
+    background: rgba(0,0,0,.12);
+  }
+
+  .settings {
+    display: none;
+    margin-bottom: 20px;
+  }
+
+  .settings.show { display: flex; }
+
+  .field {
+    display: grid;
+    gap: 6px;
+    font-size: .8rem;
+    color: var(--muted);
+    font-weight: 750;
+  }
+
+  .table-wrap {
+    overflow: auto;
+    border-radius: 18px;
+  }
+
+  table {
+    width: 100%;
+    min-width: 1120px;
+    border-collapse: collapse;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 13px;
+    text-align: left;
+    background: rgba(20, 47, 88, .95);
+    font-size: .76rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #d7e4ff;
+  }
+
+  td {
+    padding: 10px 12px;
+    border-top: 1px solid rgba(255,255,255,.09);
+  }
+
+  tr:hover { background: rgba(255,255,255,.05); }
+  .done-row { background: rgba(53, 211, 139, .10); }
+
+  .topic-chip {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 99px;
+    color: #dce9ff;
+    font-size: .82rem;
+    font-weight: 750;
+    background: rgba(102, 153, 255, .17);
+    border: 1px solid rgba(120, 168, 255, .22);
+  }
+
+  .mini { padding: 7px 8px; font-size: .82rem; }
+
+  .history-btn {
+    color: #dce9ff;
+    background: rgba(255,255,255,.1);
+    border: 1px solid var(--border);
+  }
+
+  .test-row td {
+    color: #ffe2ae;
+    font-weight: 800;
+    background: rgba(255, 172, 63, .11);
+  }
+
+  .modal {
+    position: fixed;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    inset: 0;
+    z-index: 50;
+    padding: 18px;
+    background: rgba(0,0,0,.56);
+  }
+
+  .modal.show { display: flex; }
+
+  .modal-box {
+    width: min(720px, 100%);
+    max-height: 80vh;
+    overflow: auto;
+    padding: 22px;
+    background: rgba(15, 35, 69, .95);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(22px);
+  }
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .history-item {
+    margin-top: 10px;
+    padding: 12px;
+    border-left: 3px solid var(--primary);
+    border-radius: 8px;
+    background: rgba(255,255,255,.06);
+  }
+
+  .history-item small { color: var(--muted); }
+
+  footer {
+    padding: 28px;
+    color: var(--muted);
+    text-align: center;
+    font-size: .85rem;
+  }
+
+  @media(max-width: 1000px) {
+    .dashboard { grid-template-columns: repeat(3, 1fr); }
+    .analytics { grid-template-columns: 1fr; }
+  }
+
+  @media(max-width: 600px) {
+    .wrap { padding: 15px; }
+    .dashboard { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>CA Final Audit — Smart Lecture Tracker</h1>
+  <p>Lectures, revision tracking, completion history, notes, analytics and test planning.</p>
+</header>
+
+<main class="wrap">
+
+  <section class="toolbar glass">
+    <button onclick="markVisibleDone()">✓ Complete Visible Lectures</button>
+    <button class="secondary" onclick="toggleSettings()">⚙ Settings</button>
+    <button class="secondary" onclick="exportBackup()">⇩ Export Backup</button>
+
+    <label class="btn secondary">
+      ⇧ Import Backup
+      <input type="file" hidden accept=".json" onchange="importBackup(event)">
+    </label>
+
+    <button class="danger" onclick="resetAllData()">Reset Data</button>
+    <span class="spacer"></span>
+    <span id="lastSaved" class="sub">Ready</span>
+  </section>
+
+  <section id="settingPanel" class="settings glass">
+    <label class="field">
+      Target Completion Date
+      <input id="targetDate" type="date" onchange="saveSettings()">
+    </label>
+
+    <label class="field">
+      Playback Speed
+      <select id="speed" onchange="saveSettings()">
+        <option value="1">1.0x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+        <option value="1.75">1.75x</option>
+        <option value="2">2.0x</option>
+      </select>
+    </label>
+
+    <label class="field">
+      Daily Study Target (Hours)
+      <input id="dailyTarget" type="number" min="0.5" step="0.5" value="4" onchange="saveSettings()">
+    </label>
+  </section>
+
+  <section class="dashboard">
+    <article class="stat-card glass">
+      <div class="label">Lecture Progress</div>
+      <div id="lectureProgress" class="value">0 / 0</div>
+      <div class="progress"><span id="lectureBar"></span></div>
+    </article>
+
+    <article class="stat-card glass">
+      <div class="label">Course Completion</div>
+      <div id="completionPct" class="value">0%</div>
+      <div id="completionSub" class="sub">0 hours completed</div>
+    </article>
+
+    <article class="stat-card glass">
+      <div class="label">Total Course Duration</div>
+      <div id="totalHours" class="value">0h</div>
+      <div id="totalLectures" class="sub">0 lectures</div>
+    </article>
+
+    <article class="stat-card glass">
+      <div class="label">Remaining Time</div>
+      <div id="remainingHours" class="value">0h</div>
+      <div id="speedTime" class="sub">At selected speed</div>
+    </article>
+
+    <article class="stat-card glass">
+      <div class="label">Total Revisions</div>
+      <div id="revisionCount" class="value">0</div>
+      <div class="sub">All lectures combined</div>
+    </article>
+
+    <article class="stat-card glass">
+      <div class="label">Required Daily Pace</div>
+      <div id="dailyPace" class="value">—</div>
+      <div id="paceSub" class="sub">Set your target date</div>
+    </article>
+  </section>
+
+  <section class="analytics">
+    <article class="chart-card glass">
+      <h3>Topic-wise Completion</h3>
+      <canvas id="topicChart"></canvas>
+    </article>
+
+    <article class="chart-card glass">
+      <h3>Course Hours by Day Range</h3>
+      <canvas id="dayChart"></canvas>
+    </article>
+  </section>
+
+  <section class="filters glass">
+    <input id="search" placeholder="Search SA 570, Bank Audit, Ethics..." oninput="renderTable()">
+
+    <select id="statusFilter" onchange="renderTable()">
+      <option value="all">All Statuses</option>
+      <option value="Pending">Pending</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Completed">Completed</option>
+    </select>
+
+    <select id="topicFilter" onchange="renderTable()">
+      <option value="all">All Topics</option>
+    </select>
+
+    <select id="dayFilter" onchange="renderTable()">
+      <option value="all">All Days</option>
+    </select>
+
+    <button class="secondary" onclick="clearFilters()">Clear Filters</button>
+    <span class="spacer"></span>
+    <span id="visibleCount" class="sub"></span>
+  </section>
+
+  <section class="glass table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Done</th>
+          <th>Day</th>
+          <th>Part</th>
+          <th>Topic</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Revisions</th>
+          <th>Notes</th>
+          <th>History</th>
+        </tr>
+      </thead>
+      <tbody id="lectureBody"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<div id="historyModal" class="modal" onclick="closeHistoryOutside(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h2 id="historyTitle" style="margin:0">Lecture History</h2>
+        <p id="historySubtitle" class="sub"></p>
+      </div>
+      <button class="secondary" onclick="closeHistory()">✕</button>
+    </div>
+    <div id="historyContent"></div>
+  </div>
+</div>
+
+<footer>
+  Your data is automatically saved in this browser. Use Export Backup regularly.
+</footer>
+
+<script>
+/* ===============================
+   PASTE THE rawData FROM YOUR
+   PREVIOUS HTML FILE HERE
+================================ */
+
+const rawData = `
+1|1|Basic|1:34:09
+1|2|Basic|0:44:51
+2|1|Basic|0:09:50
+2|2|Basic|1:18:57
+2|3|Basic|0:51:08
+3|1|Basic|1:10:46
+3|2|Basic|0:21:18
+4|1|SQC 1|1:35:16
+4|2|SQC 1|1:05:31
+5|1|SQC 1|1:31:55
+5|2|SQC 1|0:58:41
+6|1|SQC 1|1:23:01
+6|2|SQC 1|0:25:45
+7|1|SA 250|1:18:35
+7|2|SA 250|1:08:44
+8|1|SA 260|1:31:35
+8|2|SA 260|0:57:19
+9|1|SA 299|1:18:53
+9|2|SA 299|0:43:34
+10|1|SA 240|1:30:50
+10|2|SA 240|1:03:28
+11|1|SA 240|1:35:21
+11|2|SA 240|1:00:17
+12|1|SA 240|1:36:31
+12|2|SA 240|0:09:42
+13|1|SA 550|1:32:20
+13|2|SA 550|0:59:39
+14|1|SA 500|1:31:30
+14|2|SA 501|1:02:12
+15|1|SA 501|1:32:10
+15|2|SA 505|0:58:01
+16|1|SA 505|1:29:44
+16|2|SA 510|1:12:21
+17|1|SA 560|1:39:25
+17|2|SA 560|0:46:36
+18|1|SA 265|1:22:53
+18|2|SA 265|0:38:59
+18|3|CS Study|0:53:34
+19|1|SA 570|1:23:19
+19|2|SA 570|1:01:45
+20|1|SA 570|1:42:21
+20|2|SA 570|1:03:27
+21|1|SA 580|1:30:14
+21|2|SA 570 Correction|0:02:03
+22|1|SA 320|1:36:52
+22|2|SA 530|0:43:18
+23|1|SA 530|1:04:32
+23|2|SA 450|1:37:17
+24|1|SA 700|1:39:54
+24|2|SA 701|0:57:18
+25|1|SA 705|1:35:14
+25|2|SA 705|1:00:55
+26|1|SA 706|1:36:24
+26|2|SA 710|1:18:55
+27|1|SA 720|1:01:14
+27|2|Company Audit|1:30:59
+28|1|CARO 2020|1:33:28
+28|2|CARO 2020|0:54:37
+29|1|CARO 2020|1:32:10
+29|2|CARO 2020|0:28:05
+30|1|SA 620|1:31:06
+30|2|SA 620|0:57:17
+31|1|Professional Ethics|1:35:00
+31|2|Professional Ethics|0:53:36
+32|1|Professional Ethics|1:23:53
+32|1a|Professional Ethics|0:19:05
+32|2|Professional Ethics|0:46:53
+33|1|Professional Ethics|1:49:32
+33|2|Professional Ethics|0:45:47
+34|1|Professional Ethics|1:40:24
+34|2|Professional Ethics|0:41:46
+34|3|Professional Ethics|0:11:46
+35|1|Professional Ethics|1:28:25
+35|2|Professional Ethics|1:08:37
+36|1|Professional Ethics|1:35:03
+36|2|Professional Ethics|1:07:06
+37|1|Professional Ethics|1:31:33
+37|2|Professional Ethics|1:04:07
+38|1|Professional Ethics|1:22:56
+38|2|Professional Ethics|0:47:00
+39|1|SA 540|1:28:03
+39|2|SA 540|1:14:12
+40|1|SA 402|1:26:15
+40|2|SA 402|0:52:32
+41|1|SAE 3402|1:34:00
+41|2|SA 520|0:46:19
+42|1|NBFC|1:27:28
+42|2|NBFC|1:19:37
+43|1|NBFC|1:24:28
+43|2|NBFC|1:03:53
+44|1|Group Audit|1:29:37
+44|2|Group Audit|0:46:02
+45|1|Group Audit|1:17:37
+45|2a|SA 600|1:23:38
+45|2b|SA 600|0:13:07
+46|1|ESG|1:29:22
+46|2|ESG|1:33:33
+46|3|ESG Case Study|0:18:25
+47|1|Internal Audit|1:39:35
+47|2|Internal Audit|0:49:26
+48|1|Internal Audit|1:08:00
+48|2|Internal Audit|0:32:34
+48|3|SA 610|1:34:29
+48|4|SA 610|0:42:08
+49|1|SA 800|1:30:16
+49|2|SA 805|0:58:50
+50|1|SA 805|0:58:19
+50|2a|SA 810|0:53:19
+50|2b|SA 810|1:06:40
+51|1|SRE 2400|1:42:56
+51|2|SRE 2400|0:42:41
+51|3|SRE 2400|0:46:20
+52|1|SRE 2410|1:24:07
+52|2|SRE 2410|0:50:54
+53|1|SAE 3400|1:31:19
+53|2|SAE 3420|1:13:13
+54|1|SRS 4400|1:02:44
+54|2|SRE 4410|1:35:13
+55|1|Audit Plan|1:16:52
+55|2|Audit Plan|1:00:32
+56|1|PSU|1:27:59
+56|2|PSU|1:05:29
+57|1|PSU|1:21:27
+57|2|PSU|0:45:00
+58|1|Due Diligence|1:25:10
+58|2|Due Diligence|0:48:08
+59|—|Forensic|1:44:48
+60|1|Bank Audit|1:31:13
+60|2|Bank Audit|1:18:43
+61|1|Bank Audit|1:27:12
+61|2|Bank Audit|0:50:03
+62|1|Bank Audit|1:23:22
+62|2|Bank Audit|1:12:21
+63|1|Bank Audit|0:21:39
+63|2|Bank Audit|0:48:39
+63|3|Bank Audit|0:34:46
+63|4|Bank Audit|0:12:11
+64|1|RAIC|1:41:03
+64|2|RAIC|1:01:27
+65|1|RAIC|1:24:59
+65|2|RAIC|0:52:33
+66|1|Investigation|1:34:11
+66|2|Investigation|0:32:03
+67|1|Investigation|1:34:06
+67|2|Investigation|0:32:31
+`;
+
+const STORAGE_KEY = "CA_FINAL_AUDIT_TRACKER_V2";
+const SETTINGS_KEY = "CA_FINAL_AUDIT_SETTINGS_V2";
+
+const lectures = rawData.trim().split("\n").map((line, index) => {
+  const [day, part, topic, duration] = line.split("|");
+  return {
+    id: index,
+    day: Number(day),
+    part,
+    topic,
+    duration,
+    seconds: toSeconds(duration)
+  };
+});
+
+let progressData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+let appSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || JSON.stringify({
+  targetDate: "",
+  speed: "1",
+  dailyTarget: 4
+}));
+
+function toSeconds(time) {
+  const [h, m, s] = time.split(":").map(Number);
+  return h * 3600 + m * 60 + s;
+}
+
+function formatHours(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.round((seconds % 3600) / 60);
+  return `${hours}h ${minutes}m`;
+}
+
+function getLectureData(id) {
+  return progressData[id] || {
+    done: false,
+    status: "Pending",
+    revisions: 0,
+    notes: "",
+    completedAt: null,
+    history: []
+  };
+}
+
+function saveProgress() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progressData));
+  document.getElementById("lastSaved").textContent =
+    "Auto-saved: " + new Date().toLocaleString();
+}
+
+function addHistory(id, message) {
+  const lecture = getLectureData(id);
+
+  if (!lecture.history) lecture.history = [];
+
+  lecture.history.unshift({
+    time: new Date().toLocaleString(),
+    message
+  });
+
+  progressData[id] = lecture;
+}
+
+function setDone(id, checked) {
+  const lecture = getLectureData(id);
+
+  lecture.done = checked;
+  lecture.status = checked ? "Completed" : "Pending";
+
+  if (checked) {
+    lecture.completedAt = new Date().toLocaleString();
+    addHistory(id, "Lecture marked as completed.");
+  } else {
+    lecture.completedAt = null;
+    addHistory(id, "Completion mark removed.");
+  }
+
+  progressData[id] = lecture;
+  saveProgress();
+  updateAll();
+}
+
+function setStatus(id, status) {
+  const lecture = getLectureData(id);
+
+  lecture.status = status;
+  lecture.done = status === "Completed";
+
+  if (status === "Completed") {
+    lecture.completedAt = new Date().toLocaleString();
+  }
+
+  addHistory(id, `Status changed to "${status}".`);
+  progressData[id] = lecture;
+
+  saveProgress();
+  updateAll();
+}
+
+function updateRevision(id, value) {
+  const lecture = getLectureData(id);
+  const newValue = Math.max(0, Number(value));
+
+  if (newValue !== Number(lecture.revisions || 0)) {
+    addHistory(id, `Revision count changed to ${newValue}.`);
+  }
+
+  lecture.revisions = newValue;
+  progressData[id] = lecture;
+
+  saveProgress();
+  updateAll();
+}
+
+function updateNotes(id, value) {
+  const lecture = getLectureData(id);
+  lecture.notes = value;
+  addHistory(id, "Notes updated.");
+
+  progressData[id] = lecture;
+  saveProgress();
+}
+
+function saveSettings() {
+  appSettings = {
+    targetDate: document.getElementById("targetDate").value,
+    speed: document.getElementById("speed").value,
+    dailyTarget: document.getElementById("dailyTarget").value
+  };
+
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+  updateAll();
+}
+
+function toggleSettings() {
+  document.getElementById("settingPanel").classList.toggle("show");
+}
+
+function setupFilters() {
+  const topics = [...new Set(lectures.map(item => item.topic))].sort();
+  const topicFilter = document.getElementById("topicFilter");
+  const dayFilter = document.getElementById("dayFilter");
+
+  topicFilter.innerHTML =
+    `<option value="all">All Topics</option>` +
+    topics.map(topic => `<option value="${topic}">${topic}</option>`).join("");
+
+  dayFilter.innerHTML =
+    `<option value="all">All Days</option>` +
+    Array.from({ length: 67 }, (_, i) =>
+      `<option value="${i + 1}">Day ${i + 1}</option>`
+    ).join("");
+
+  document.getElementById("targetDate").value = appSettings.targetDate || "";
+  document.getElementById("speed").value = appSettings.speed || "1";
+  document.getElementById("dailyTarget").value = appSettings.dailyTarget || 4;
+}
+
+function renderTable() {
+  const searchValue = document.getElementById("search").value.toLowerCase();
+  const statusValue = document.getElementById("statusFilter").value;
+  const topicValue = document.getElementById("topicFilter").value;
+  const dayValue = document.getElementById("dayFilter").value;
+
+  const visibleLectures = lectures.filter(item => {
+    const current = getLectureData(item.id);
+
+    return (
+      `${item.topic} ${item.day} ${item.part}`.toLowerCase().includes(searchValue) &&
+      (statusValue === "all" || current.status === statusValue) &&
+      (topicValue === "all" || item.topic === topicValue) &&
+      (dayValue === "all" || String(item.day) === dayValue)
+    );
+  });
+
+  document.getElementById("visibleCount").textContent =
+    `Showing ${visibleLectures.length} of ${lectures.length} lectures`;
+
+  document.getElementById("lectureBody").innerHTML = visibleLectures.map(item => {
+    const state = getLectureData(item.id);
+
+    return `
+      <tr class="${state.done ? "done-row" : ""}">
+        <td>
+          <input type="checkbox"
+            ${state.done ? "checked" : ""}
+            onchange="setDone(${item.id}, this.checked)">
+        </td>
+
+        <td><b>${item.day}</b></td>
+        <td>${item.part}</td>
+        <td><span class="topic-chip">${item.topic}</span></td>
+        <td>${item.duration}</td>
+
+        <td>
+          <select class="mini" onchange="setStatus(${item.id}, this.value)">
+            <option ${state.status === "Pending" ? "selected" : ""}>Pending</option>
+            <option ${state.status === "In Progress" ? "selected" : ""}>In Progress</option>
+            <option ${state.status === "Completed" ? "selected" : ""}>Completed</option>
+          </select>
+        </td>
+
+        <td>
+          <input class="mini" style="width:70px"
+            type="number" min="0"
+            value="${state.revisions || 0}"
+            onchange="updateRevision(${item.id}, this.value)">
+        </td>
+
+        <td>
+          <input class="mini" style="width:220px"
+            value="${escapeHTML(state.notes || "")}"
+            placeholder="Your notes..."
+            onchange="updateNotes(${item.id}, this.value)">
+        </td>
+
+        <td>
+          <button class="history-btn mini" onclick="showHistory(${item.id})">
+            ${state.history?.length || 0} Logs
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function escapeHTML(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function clearFilters() {
+  document.getElementById("search").value = "";
+  document.getElementById("statusFilter").value = "all";
+  document.getElementById("topicFilter").value = "all";
+  document.getElementById("dayFilter").value = "all";
+  renderTable();
+}
+
+function markVisibleDone() {
+  const visibleCheckboxes = document.querySelectorAll(
+    "#lectureBody input[type='checkbox']:not(:checked)"
+  );
+
+  visibleCheckboxes.forEach(checkbox => {
+    const row = checkbox.closest("tr");
+    const day = row.children[1].innerText;
+    const part = row.children[2].innerText;
+
+    const lecture = lectures.find(
+      item => String(item.day) === day && item.part === part
+    );
+
+    if (lecture) setDone(lecture.id, true);
+  });
+
+  updateAll();
+}
+
+function showHistory(id) {
+  const lecture = lectures.find(item => item.id === id);
+  const state = getLectureData(id);
+
+  document.getElementById("historyTitle").textContent =
+    `${lecture.topic} — Day ${lecture.day}, Part ${lecture.part}`;
+
+  document.getElementById("historySubtitle").textContent =
+    state.completedAt
+      ? `Completed on: ${state.completedAt}`
+      : "Not completed yet";
+
+  const history = state.history || [];
+
+  document.getElementById("historyContent").innerHTML = history.length
+    ? history.map(item => `
+        <div class="history-item">
+          <div>${item.message}</div>
+          <small>${item.time}</small>
+        </div>
+      `).join("")
+    : `<p class="sub">No history exists for this lecture yet.</p>`;
+
+  document.getElementById("historyModal").classList.add("show");
+}
+
+function closeHistory() {
+  document.getElementById("historyModal").classList.remove("show");
+}
+
+function closeHistoryOutside(event) {
+  if (event.target.id === "historyModal") closeHistory();
+}
+
+function updateAll() {
+  const completed = lectures.filter(item => getLectureData(item.id).done);
+
+  const totalSeconds = lectures.reduce((sum, item) => sum + item.seconds, 0);
+  const completedSeconds = completed.reduce((sum, item) => sum + item.seconds, 0);
+  const remainingSeconds = totalSeconds - completedSeconds;
+
+  const completion = totalSeconds
+    ? (completedSeconds / totalSeconds) * 100
+    : 0;
+
+  const revisions = lectures.reduce(
+    (sum, item) => sum + Number(getLectureData(item.id).revisions || 0),
+    0
+  );
+
+  document.getElementById("lectureProgress").textContent =
+    `${completed.length} / ${lectures.length}`;
+
+  document.getElementById("completionPct").textContent =
+    `${completion.toFixed(1)}%`;
+
+  document.getElementById("completionSub").textContent =
+    `${formatHours(completedSeconds)} completed`;
+
+  document.getElementById("lectureBar").style.width = completion + "%";
+
+  document.getElementById("totalHours").textContent = formatHours(totalSeconds);
+  document.getElementById("totalLectures").textContent = `${lectures.length} lectures`;
+
+  document.getElementById("remainingHours").textContent =
+    formatHours(remainingSeconds);
+
+  const speed = Number(appSettings.speed || 1);
+  document.getElementById("speedTime").textContent =
+    `${formatHours(remainingSeconds / speed)} at ${speed}x speed`;
+
+  document.getElementById("revisionCount").textContent = revisions;
+
+  if (appSettings.targetDate) {
+    const daysLeft = Math.ceil(
+      (new Date(appSettings.targetDate) - new Date()) / 86400000
+    );
+
+    if (daysLeft > 0) {
+      document.getElementById("dailyPace").textContent =
+        `${formatHours(remainingSeconds / daysLeft)}/day`;
+
+      document.getElementById("paceSub").textContent =
+        `${daysLeft} days remaining`;
+    } else {
+      document.getElementById("dailyPace").textContent = "Target passed";
+      document.getElementById("paceSub").textContent =
+        "Please select a future completion date.";
+    }
+  } else {
+    document.getElementById("dailyPace").textContent =
+      `${appSettings.dailyTarget || 4}h/day`;
+
+    document.getElementById("paceSub").textContent =
+      "Set a target date for exact calculation.";
+  }
+
+  renderTable();
+  drawCharts();
+}
+
+function drawCharts() {
+  const topicData = {};
+
+  lectures.forEach(item => {
+    if (!topicData[item.topic]) {
+      topicData[item.topic] = { total: 0, done: 0 };
+    }
+
+    topicData[item.topic].total += item.seconds;
+
+    if (getLectureData(item.id).done) {
+      topicData[item.topic].done += item.seconds;
+    }
+  });
+
+  const topicChartData = Object.entries(topicData)
+    .map(([name, value]) => ({
+      name,
+      value: value.total ? (value.done / value.total) * 100 : 0
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 12);
+
+  drawBarChart(
+    "topicChart",
+    topicChartData.map(item => item.name),
+    topicChartData.map(item => item.value),
+    "#7eaaff",
+    "%"
+  );
+
+  const ranges = [[1, 10], [11, 20], [21, 30], [31, 40], [41, 50], [51, 60], [61, 67]];
+
+  const hoursData = ranges.map(([start, end]) =>
+    lectures
+      .filter(item => item.day >= start && item.day <= end)
+      .reduce((sum, item) => sum + item.seconds / 3600, 0)
+  );
+
+  drawBarChart(
+    "dayChart",
+    ranges.map(range => `D${range[0]}-${range[1]}`),
+    hoursData,
+    "#55e0a2",
+    "h"
+  );
+}
+
+function drawBarChart(id, labels, values, color, suffix) {
+  const canvas = document.getElementById(id);
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * ratio;
+  canvas.height = rect.height * ratio;
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(ratio, ratio);
+
+  const width = rect.width;
+  const height = rect.height;
+
+  ctx.clearRect(0, 0, width, height);
+
+  const max = Math.max(...values, 1);
+  const left = 45;
+  const top = 20;
+  const bottom = 38;
+  const graphHeight = height - top - bottom;
+  const gap = 8;
+  const barWidth = ((width - left - 15) / values.length) - gap;
+
+  ctx.font = "11px Arial";
+
+  for (let i = 0; i < 4; i++) {
+    const y = top + (graphHeight * i / 3);
+    const value = max * (1 - i / 3);
+
+    ctx.strokeStyle = "rgba(255,255,255,.10)";
+    ctx.beginPath();
+    ctx.moveTo(left, y);
+    ctx.lineTo(width - 10, y);
+    ctx.stroke();
+
+    ctx.fillStyle = "#b7c4dc";
+    ctx.textAlign = "right";
+    ctx.fillText(`${Math.round(value)}${suffix}`, left - 7, y + 4);
+  }
+
+  values.forEach((value, index) => {
+    const barHeight = (value / max) * graphHeight;
+    const x = left + index * (barWidth + gap) + gap / 2;
+    const y = top + graphHeight - barHeight;
+
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.85;
+    ctx.fillRect(x, y, barWidth, barHeight);
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = "#dce9ff";
+    ctx.textAlign = "center";
+    ctx.font = "10px Arial";
+
+    const label = labels[index].length > 12
+      ? labels[index].slice(0, 11) + "…"
+      : labels[index];
+
+    ctx.fillText(label, x + barWidth / 2, height - 16);
+  });
+}
+
+function exportBackup() {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    progressData,
+    appSettings
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(backup, null, 2)],
+    { type: "application/json" }
+  );
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "CA_Final_Audit_Tracker_Backup.json";
+  link.click();
+}
+
+function importBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      const backup = JSON.parse(reader.result);
+
+      progressData = backup.progressData || {};
+      appSettings = backup.appSettings || appSettings;
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressData));
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+
+      setupFilters();
+      updateAll();
+
+      alert("Backup imported successfully.");
+    } catch {
+      alert("This backup file is invalid.");
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+function resetAllData() {
+  const confirmed = confirm(
+    "This will permanently delete all marks, notes, revisions and history from this browser. Continue?"
+  );
+
+  if (!confirmed) return;
+
+  progressData = {};
+  localStorage.removeItem(STORAGE_KEY);
+
+  updateAll();
+  saveProgress();
+}
+
+window.addEventListener("resize", drawCharts);
+
+setupFilters();
+updateAll();
+</script>
+
+</body>
+</html>
